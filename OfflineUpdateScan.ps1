@@ -257,10 +257,6 @@ Function Add-OfflineUpdateScanTask {
     $Trigger.ExecutionTimeLimit = "PT5M"
     $Trigger.Id = "TimeTriggerId"
     $Trigger.Enabled = $True 
-    <#
-    $Trigger.StateChange = [TASK_SESSION_STATE_CHANGE_TYPE]::TASK_REMOTE_CONNECT
-    $Trigger.UserId = "Stuart"
-    #>
 
     $Action = $NewTaskDef.Actions.Create([TASK_ACTION_TYPE]::TASK_ACTION_EXEC)
     $Action.Path = "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
@@ -315,14 +311,13 @@ Param (
     [Object]
     $OfflineUpdateCollection
 )
-switch ($Format) {
-    'csv' { Select-Object -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}} | Export-Csv -Path $FileName -NoTypeInformation  }
-    'xml' {  }
-    'console' {Format-Table -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize , @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}}
-    Default {}
+    switch ($Format) {
+        'csv' { Select-Object -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}} | Export-Csv -Path $FileName -NoTypeInformation  }
+        'xml' {  }
+        'console' {Format-Table -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize , @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}}
+        Default {}
+    }
 }
-}
-
 
 if ($AddTask.IsPresent) {
     Add-OfflineUpdateScanTask
@@ -336,7 +331,7 @@ if ($Run.IsPresent) {
     $Script:UpdateService = $UpdateServiceManager.AddScanPackageService("Offline Sync Service", $CabLocation, 1)
     $Script:UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
     Write-Verbose "Exporting $Format format file to $Path"
-    Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path #C:\OfflineUpdateScan\OLUpdates2.CSV
+    Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path
     Remove-OfflineUpdateScantask
 }
 
