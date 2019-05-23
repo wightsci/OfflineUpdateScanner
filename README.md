@@ -12,5 +12,5 @@ See my blog post for more [details](https://carisbrookelabs.wordpress.com/2019/0
 
 Example:
 ```PowerShell
-.\OfflineUpdateScan.ps1 -Run -Format html -CabSource .\wsusscn2.cab
+OfflineUpdateScan.ps1 -Run -Format html -CabSource .\wsusscn2.cab
 ```
