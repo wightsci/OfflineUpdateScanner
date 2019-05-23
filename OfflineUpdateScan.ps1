@@ -196,7 +196,7 @@ public enum TASK_COMPATIBILITY
 "@
 #Constants from wuapi.h
 Add-Type -TypeDefinition @"
-enum OperationResultCode
+public enum OperationResultCode
     {
         orcNotStarted	= 0,
         orcInProgress	= 1,
