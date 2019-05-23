@@ -57,7 +57,7 @@ Param(
     $Run,
     [Parameter(ParameterSetName="Exec")]
     [Parameter(ParameterSetName="Task")]
-    [ValidateSet("csv","xml","console","html")]
+    [ValidateSet("CSV","XML","Console","HTML")]
     [String]
     $Format="csv",
     [Parameter(Mandatory=$false,ParameterSetName="Exec")]
