@@ -11,7 +11,7 @@ Tested on Windows 7 (PowerShell 3.0) and Windows Server 2016
 See my blog post for more [details](https://carisbrookelabs.wordpress.com/2019/05/23/offline-windows-update-scans-using-powershell/).
 
 Example:
-```PowerShell
+```powershell
 OfflineUpdateScan.ps1 -Run -Format html -CabSource .\wsusscn2.cab
 ```
 
