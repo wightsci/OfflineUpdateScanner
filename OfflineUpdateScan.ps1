@@ -56,7 +56,8 @@ Param(
     [Switch]
     $Run,
     [Parameter(ParameterSetName="Exec")]
-    [ValidateSet("csv","xml","console")]
+    [Parameter(ParameterSetName="Task")]
+    [ValidateSet("csv","xml","console","html")]
     [String]
     $Format="csv",
     [Parameter(Mandatory=$false,ParameterSetName="Exec")]
@@ -68,13 +69,6 @@ Param(
     $CabSource = "$env:userprofile\documents\wsusscn2.cab"
 )
 $ScriptGuid = '50bf2b41-ffb4-4381-b693-71a14f5874dd'
-
-$orcNotStarted	= 0
-$orcInProgress	= 1
-$orcSucceeded	= 2
-$orcSucceededWithErrors	= 3
-$orcFailed	= 4
-$orcAborted	= 5
 
 ## Constant Enums for Schedule Tasks. Derived from taskschd.h
 Add-Type -TypeDefinition @" 
@@ -200,7 +194,28 @@ public enum TASK_COMPATIBILITY
         TASK_COMPATIBILITY_V2_4	= 6
     }
 "@
-
+#Constants from wuapi.h
+Add-Type -TypeDefinition @"
+enum OperationResultCode
+    {
+        orcNotStarted	= 0,
+        orcInProgress	= 1,
+        orcSucceeded	= 2,
+        orcSucceededWithErrors	= 3,
+        orcFailed	= 4,
+        orcAborted	= 5
+    }
+"@
+#Constant from wuapicommon.h
+Add-Type -TypeDefinition @"
+public enum ServerSelection
+    {
+        ssDefault	= 0,
+        ssManagedServer	= 1,
+        ssWindowsUpdate	= 2,
+        ssOthers	= 3
+    } 
+"@
 Function Remove-OfflineUpdateScantask {
     $STService = New-Object -ComObject Schedule.Service 
     $STService.Connect()
@@ -225,17 +240,13 @@ Function Add-OfflineUpdateScanTask {
     $Principal = $NewTaskDef.Principal
     $Principal.LogonType = [TASK_LOGON_TYPE]::Task_Logon_Service_Account
     $Principal.UserId = 'NT AUTHORITY\SYSTEM'
+    $Principal.Id = "System"
     $Principal | Select-Object * | Write-Verbose
     $Settings = $NewTaskDef.Settings
     $Settings.Enabled = $True
-    $Settings.StartWhenAvailable = $True 
-    $Settings.Hidden = $False 
     $Settings.DisallowStartIfOnBatteries = $False
-    #Manually start Task, no Trigger required
-    $Settings.AllowDemandStart = $True
 
-    $Triggers = $NewTaskDef.Triggers 
-    $Trigger = $Triggers.Create([TASK_TRIGGER_TYPE2]::TASK_TRIGGER_TIME)
+    $Trigger = $NewTaskDef.Triggers.Create([TASK_TRIGGER_TYPE2]::TASK_TRIGGER_TIME)
 
     if ($Script:StartAt) {
         $StartTime = $Script:StartAt
@@ -265,7 +276,7 @@ Function Add-OfflineUpdateScanTask {
 
     Write-Verbose "Task Definition created. About to submit Task..."
 
-    [void]$RootFolder.RegisterTaskDefinition($ScriptGuid, $NewTaskDef,6,$Null,$Null,3)
+    $RootFolder.RegisterTaskDefinition($ScriptGuid, $NewTaskDef,[TASK_CREATION]::TASK_CREATE_OR_UPDATE,$Null,$Null,$Null)
 
     Write-Verbose "Task $ScriptGuid Submitted"
 }
@@ -282,11 +293,17 @@ if (!($Path)) {
 
 # get-updatecollection
 Function Get-OfflineUpdateCollection {
+    $UpdateServiceManager = New-Object -ComObject "Microsoft.Update.ServiceManager"
+    $UpdateService = $UpdateServiceManager.AddScanPackageService("Offline Sync Service", $CabLocation, 1)
+
+    $UpdateSession = New-Object -ComObject "Microsoft.Update.Session"
+    $UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
+    
     Write-Verbose "Searching for updates..."
 
-    $Script:UpdateSearcher.ServerSelection = 3 # ssOthers
-    $Script:UpdateSearcher.ServiceID = $UpdateService.ServiceID
-    $SearchResult = $Script:UpdateSearcher.Search("IsInstalled=0")
+    $UpdateSearcher.ServerSelection = [ServerSelection]::SSOthers
+    $UpdateSearcher.ServiceID = $UpdateService.ServiceID
+    $SearchResult = $UpdateSearcher.Search("IsInstalled=0")
     $Updates = $SearchResult.Updates
     
     If ($Updates.Count -eq 0) {
@@ -301,7 +318,7 @@ Function Get-OfflineUpdateCollection {
 Function Export-OfflineUpdateCollection {
 Param (
     [Parameter(Mandatory=$True)]
-    [ValidateSet("xml","csv","console")]
+    [ValidateSet("xml","csv","console","html")]
     [String]
     $Format,
     [Parameter(Mandatory=$False)]
@@ -311,11 +328,12 @@ Param (
     [Object]
     $OfflineUpdateCollection
 )
-    switch ($Format) {
-        'csv' { Select-Object -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}} | Export-Csv -Path $FileName -NoTypeInformation  }
-        'xml' {  }
-        'console' {Format-Table -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize , @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}}
-        Default {}
+$OutPutObject = Select-Object -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}    
+switch ($Format) {
+        'csv'  { $OutPutObject | Export-Csv -Path $FileName -NoTypeInformation  }
+        'xml'  { ($OutPutObject | ConvertTo-Xml -NoTypeInformation -As Document).OuterXML | Out-File -FilePath $FileName } #Export-Clixml -Path $FileName
+        'html' { $OutPutObject | ConvertTo-Html -Title "Needed Windows Updates for $env:ComputerName" | Out-File -FilePath $FileName}
+        'console' { Format-Table -InputObject $OutPutObject}
     }
 }
 
@@ -326,27 +344,11 @@ if ($AddTask.IsPresent) {
 if ($Run.IsPresent) {
     New-Item -ItemType Directory -Path $WorkDirectory
     Copy-Item $CabSource -Destination $CabLocation
-    $Script:UpdateSession = New-Object -ComObject "Microsoft.Update.Session"
-    $Script:UpdateServiceManager = New-Object -ComObject "Microsoft.Update.ServiceManager"
-    $Script:UpdateService = $UpdateServiceManager.AddScanPackageService("Offline Sync Service", $CabLocation, 1)
-    $Script:UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
     Write-Verbose "Exporting $Format format file to $Path"
     Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path
     Remove-OfflineUpdateScantask
 }
 
-# psuedo code
-
-# get-commandline
-# two possible options - installing or running
-
-# setup
-
-# setup scheduled task
-# possible options runnow, runat
-
-
-# cleanup
 
 
 
