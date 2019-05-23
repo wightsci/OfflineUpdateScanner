@@ -14,3 +14,8 @@ Example:
 ```PowerShell
 OfflineUpdateScan.ps1 -Run -Format html -CabSource .\wsusscn2.cab
 ```
+
+Example:
+```PowerShell
+OfflineUpdateScan.ps1 -AddTask -Format html
+```

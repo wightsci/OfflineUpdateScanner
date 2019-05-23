@@ -342,8 +342,16 @@ if ($AddTask.IsPresent) {
 }
 
 if ($Run.IsPresent) {
-    New-Item -ItemType Directory -Path $WorkDirectory
-    Copy-Item $CabSource -Destination $CabLocation
+    try {
+        New-Item -ItemType Directory -Path $WorkDirectory
+    }
+    catch {}
+
+    try {
+        Copy-Item $CabSource -Destination $CabLocation
+    }
+    catch {}
+    
     Write-Verbose "Exporting $Format format file to $Path"
     Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path
     Remove-OfflineUpdateScantask
