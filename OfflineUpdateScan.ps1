@@ -80,14 +80,10 @@ public enum TASK_RUN_FLAGS
         TASK_RUN_USE_SESSION_ID	= 0x4,
         TASK_RUN_USER_SID	= 0x8
     }
-"@
-    Add-Type -TypeDefinition @" 
 public enum TASK_ENUM_FLAGS
     {
         TASK_ENUM_HIDDEN	= 0x1
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_LOGON_TYPE
     {
         TASK_LOGON_NONE	= 0,
@@ -98,23 +94,17 @@ public enum TASK_LOGON_TYPE
         TASK_LOGON_SERVICE_ACCOUNT	= 5,
         TASK_LOGON_INTERACTIVE_TOKEN_OR_PASSWORD	= 6
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_RUNLEVEL
     {
         TASK_RUNLEVEL_LUA	= 0,
         TASK_RUNLEVEL_HIGHEST	= 1
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_PROCESSTOKENSID
     {
         TASK_PROCESSTOKENSID_NONE	= 0,
         TASK_PROCESSTOKENSID_UNRESTRICTED	= 1,
         TASK_PROCESSTOKENSID_DEFAULT	= 2
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_STATE
     {
         TASK_STATE_UNKNOWN	= 0,
@@ -123,8 +113,6 @@ public enum TASK_STATE
         TASK_STATE_READY	= 3,
         TASK_STATE_RUNNING	= 4
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_CREATION
     {
         TASK_VALIDATE_ONLY	= 0x1,
@@ -135,8 +123,6 @@ public enum TASK_CREATION
         TASK_DONT_ADD_PRINCIPAL_ACE	= 0x10,
         TASK_IGNORE_REGISTRATION_TRIGGERS	= 0x20
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_TRIGGER_TYPE2
     {
         TASK_TRIGGER_EVENT	= 0,
@@ -152,8 +138,6 @@ public enum TASK_TRIGGER_TYPE2
         TASK_TRIGGER_SESSION_STATE_CHANGE	= 11,
         TASK_TRIGGER_CUSTOM_TRIGGER_01	= 12
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_SESSION_STATE_CHANGE_TYPE
     {
         TASK_CONSOLE_CONNECT	= 1,
@@ -163,8 +147,6 @@ public enum TASK_SESSION_STATE_CHANGE_TYPE
         TASK_SESSION_LOCK	= 7,
         TASK_SESSION_UNLOCK	= 8
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_ACTION_TYPE
     {
         TASK_ACTION_EXEC	= 0,
@@ -172,8 +154,6 @@ public enum TASK_ACTION_TYPE
         TASK_ACTION_SEND_EMAIL	= 6,
         TASK_ACTION_SHOW_MESSAGE	= 7
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_INSTANCES_POLICY
     {
         TASK_INSTANCES_PARALLEL	= 0,
@@ -181,8 +161,6 @@ public enum TASK_INSTANCES_POLICY
         TASK_INSTANCES_IGNORE_NEW	= 2,
         TASK_INSTANCES_STOP_EXISTING	= 3
     }
-"@
-Add-Type -TypeDefinition @" 
 public enum TASK_COMPATIBILITY
     {
         TASK_COMPATIBILITY_AT	= 0,
@@ -351,7 +329,7 @@ if ($Run.IsPresent) {
         Copy-Item $CabSource -Destination $CabLocation
     }
     catch {}
-    
+
     Write-Verbose "Exporting $Format format file to $Path"
     Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path
     Remove-OfflineUpdateScantask
