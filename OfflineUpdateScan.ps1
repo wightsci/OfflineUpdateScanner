@@ -321,7 +321,7 @@ if ($AddTask.IsPresent) {
 
 if ($Run.IsPresent) {
     try {
-        New-Item -ItemType Directory -Path $WorkDirectory
+        New-Item -ItemType Directory -Path $WorkDirectory -ErrorAction Stop
     }
     catch {}
 
