@@ -14,7 +14,7 @@ Specifies that a Scheduled Task should be created.
 Specifies that a scan should be run interactively
 
 .PARAMETER Format
-Specifies the report format: CSV or XML for files, Console for the ineractive screen.
+Specifies the report format: CSV, HTML or XML for files, Console for the ineractive screen.
 
 .PARAMETER Path
 Specifies the file path for the report file.
@@ -276,7 +276,7 @@ Function Add-OfflineUpdateScanTask {
 
     Write-Verbose "Task Definition created. About to submit Task..."
 
-    $RootFolder.RegisterTaskDefinition($ScriptGuid, $NewTaskDef,[TASK_CREATION]::TASK_CREATE_OR_UPDATE,$Null,$Null,$Null)
+    [Void]$RootFolder.RegisterTaskDefinition($ScriptGuid, $NewTaskDef,[TASK_CREATION]::TASK_CREATE_OR_UPDATE,$Null,$Null,$Null)
 
     Write-Verbose "Task $ScriptGuid Submitted"
 }
