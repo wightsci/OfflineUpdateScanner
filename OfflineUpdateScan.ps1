@@ -284,11 +284,13 @@ Function Get-OfflineUpdateCollection {
     $SearchResult = $UpdateSearcher.Search("IsInstalled=0")
     $Updates = $SearchResult.Updates
     
+    Write-Verbose "$($Updates.Count) updates found."
+
     If ($Updates.Count -eq 0) {
         #This area blank by design
      }
-    else {
-        $Updates
+    else {      
+        Return $Updates
     }
 }
 
@@ -306,10 +308,10 @@ Param (
     [Object]
     $OfflineUpdateCollection
 )
-$OutPutObject = Select-Object -InputObject $OfflineUpdateCollection -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}    
+$OutPutObject = $OfflineUpdateCollection | Select-Object -Property MsrcSeverity, Title, MaxDownloadSize, MinDownloadSize, @{Name="KBs";Expression={$_.KBArticleIds -join ';'}}    
 switch ($Format) {
         'csv'  { $OutPutObject | Export-Csv -Path $FileName -NoTypeInformation  }
-        'xml'  { ($OutPutObject | ConvertTo-Xml -NoTypeInformation -As Document).OuterXML | Out-File -FilePath $FileName } #Export-Clixml -Path $FileName
+        'xml'  { ($OutPutObject | ConvertTo-Xml -NoTypeInformation -As Document).OuterXML | Out-File -FilePath $FileName }
         'html' { $OutPutObject | ConvertTo-Html -Title "Needed Windows Updates for $env:ComputerName" | Out-File -FilePath $FileName}
         'console' { Format-Table -InputObject $OutPutObject}
     }
@@ -326,12 +328,13 @@ if ($Run.IsPresent) {
     catch {}
 
     try {
-        Copy-Item $CabSource -Destination $CabLocation
+        Copy-Item $CabSource -Destination $CabLocation -ErrorAction Stop
     }
     catch {}
 
     Write-Verbose "Exporting $Format format file to $Path"
-    Get-OfflineUpdateCollection | Export-OfflineUpdateCollection -Format $Format -FileName  $Path
+    $ExportCollection = Get-OfflineUpdateCollection
+    Export-OfflineUpdateCollection -Format $Format -FileName  $Path -OfflineUpdateCollection $ExportCollection
     Remove-OfflineUpdateScantask
 }
 
