@@ -5,7 +5,7 @@ Scans a computer for Windows updates using the offline CAB file
 
 .DESCRIPTION
 
-Scans a computer fo Windows updates using the offline CAB file, or creates a Scheduled Task to do so.
+Scans a computer for Windows updates using the offline CAB file, or creates a Scheduled Task to do so.
 
 .PARAMETER AddTask
 Specifies that a Scheduled Task should be created.
@@ -334,7 +334,9 @@ if ($Run.IsPresent) {
 
     Write-Verbose "Exporting $Format format file to $Path"
     $ExportCollection = Get-OfflineUpdateCollection
-    Export-OfflineUpdateCollection -Format $Format -FileName  $Path -OfflineUpdateCollection $ExportCollection
+    if ($ExportCollection) {
+        Export-OfflineUpdateCollection -Format $Format -FileName $Path -OfflineUpdateCollection $ExportCollection
+    }
     Remove-OfflineUpdateScantask
 }
 
